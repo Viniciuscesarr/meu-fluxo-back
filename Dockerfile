@@ -18,7 +18,7 @@ COPY . .
 # Instala dependências SEM scripts
 RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction --ignore-platform-reqs
 
-# Cria o arquivo CORS usando echo
+# Cria o arquivo CORS
 RUN mkdir -p config && \
     echo '<?php' > config/cors.php && \
     echo '' >> config/cors.php && \
@@ -33,8 +33,18 @@ RUN mkdir -p config && \
     echo "    'supports_credentials' => false," >> config/cors.php && \
     echo '];' >> config/cors.php
 
-# Limpa cache problemático
-RUN php artisan config:clear
+# Substitui a função withMiddleware vazia pela versão com CORS
+RUN sed -i '/->withMiddleware(function (Middleware $middleware): void {/,/^    })/c\
+    ->withMiddleware(function (Middleware $middleware) {\
+        $middleware->validateCsrfTokens(except: [\
+            \"api/*\",\
+        ]);\
+        \
+        $middleware->append(\\Illuminate\\Http\\Middleware\\HandleCors::class);\
+    })' bootstrap/app.php
+
+# Limpa e recria o cache
+RUN php artisan config:clear && php artisan config:cache
 
 EXPOSE 8000
 
