@@ -12,33 +12,39 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copia primeiro apenas os arquivos necessários para composer
+# Copia primeiro os arquivos do composer
 COPY composer.json composer.lock ./
 
-# Instala dependências SEM o pacote CORS descontinuado
+# Instala dependências SEM tentar instalar pacotes desnecessários
 RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction --ignore-platform-reqs
 
 # Copia o restante do projeto
 COPY . .
 
-# Cria o arquivo CORS manualmente (solução nativa do Laravel)
-RUN mkdir -p config && \
-    echo '<?php' > config/cors.php && \
-    echo '' >> config/cors.php && \
-    echo 'return [' >> config/cors.php && \
-    echo "    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'register']," >> config/cors.php && \
-    echo "    'allowed_methods' => ['*']," >> config/cors.php && \
-    echo "    'allowed_origins' => ['https://meu-fluxo-nine.vercel.app']," >> config/cors.php && \
-    echo "    'allowed_origins_patterns' => []," >> config/cors.php && \
-    echo "    'allowed_headers' => ['*']," >> config/cors.php && \
-    echo "    'exposed_headers' => []," >> config/cors.php && \
-    echo "    'max_age' => 0," >> config/cors.php && \
-    echo "    'supports_credentials' => true," >> config/cors.php && \
-    echo '];' >> config/cors.php
+# Cria/atualiza o arquivo CORS para Laravel 12
+RUN mkdir -p config && cat > config/cors.php << 'EOF'
+<?php
 
-# Garante que as permissões estão corretas
-RUN chown -R www-data:www-data /var/www/html/storage
-RUN chown -R www-data:www-data /var/www/html/bootstrap/cache
+return [
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'register', 'user'],
+    'allowed_methods' => ['*'],
+    'allowed_origins' => ['https://meu-fluxo-nine.vercel.app'],
+    'allowed_origins_patterns' => [],
+    'allowed_headers' => ['*'],
+    'exposed_headers' => [],
+    'max_age' => 0,
+    'supports_credentials' => true,
+];
+EOF
+
+# Configura permissões
+RUN chmod -R 775 storage bootstrap/cache
+
+# Gera key da aplicação se não existir
+RUN if [ ! -f .env ]; then \
+        cp .env.example .env && \
+        php artisan key:generate; \
+    fi
 
 # Limpa e recria o cache
 RUN php artisan config:clear && php artisan cache:clear && php artisan config:cache
