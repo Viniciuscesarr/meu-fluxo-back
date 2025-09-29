@@ -6,7 +6,7 @@ return [
     'allowed_methods' => ['*'],
     
     'allowed_origins' => [
-        'https://seu-frontend.vercel.app',
+        'https://meu-fluxo-nine.vercel.app',
         'http://localhost:3000',
         'http://localhost:5173' // ou a porta do seu frontend local
     ],
