@@ -22,18 +22,15 @@ WORKDIR /var/www/html
 # 6. Copia APENAS os arquivos necessários para o Composer primeiro
 COPY composer.json composer.lock ./
 
-# 7. Instala dependências SEM scripts e SEM otimização
+# 7. Instala dependências SEM scripts
 RUN composer install --no-dev --no-scripts --no-interaction --ignore-platform-reqs
 
 # 8. Copia o resto do projeto
 COPY . .
 
-# 9. Roda os scripts do Composer e otimiza
-RUN composer run-script post-autoload-dump
-RUN composer dump-autoload --optimize
-
-# 10. Cria o arquivo CORS manualmente
-RUN echo '<?php return [' \
+# 9. Cria o arquivo CORS manualmente se não existir
+RUN if [ ! -f config/cors.php ]; then \
+    echo '<?php return [' \
     '"paths" => ["api/*", "sanctum/csrf-cookie"],' \
     '"allowed_methods" => ["*"],' \
     '"allowed_origins" => ["*"],' \
@@ -42,13 +39,11 @@ RUN echo '<?php return [' \
     '"exposed_headers" => [],' \
     '"max_age" => 0,' \
     '"supports_credentials" => false,' \
-    '];' > config/cors.php
+    '];' > config/cors.php; \
+    fi
 
-# 11. Cache das configurações
-RUN php artisan config:cache
-
-# 12. Expõe a porta 8000
+# 10. Expõe a porta 8000
 EXPOSE 8000
 
-# 13. Start command com migrações
+# 11. Start command com migrações
 CMD sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
