@@ -12,13 +12,34 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Configure CORS
+        // Middleware CORS - DEVE ser o primeiro
+        $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
+        
+        // Configurações do CSRF
         $middleware->validateCsrfTokens(except: [
             'api/*',
+            'sanctum/csrf-cookie',
+            'login',
+            'logout',
+            'register'
         ]);
         
-        // Adicione o middleware CORS
-        $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
+        // Grupo de middleware API
+        $middleware->group('api', [
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
+        
+        // Grupo de middleware web
+        $middleware->group('web', [
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
