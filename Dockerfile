@@ -25,8 +25,8 @@ COPY . .
 # 7. Instala dependências do Laravel
 RUN composer install --no-dev --optimize-autoloader
 
-# 8. Expõe a porta 8000 (Laravel Serve)
+# 8. Expõe a porta 8000
 EXPOSE 8000
 
-# 9. Start command do Laravel
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# 9. Start command com migrações
+CMD sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
