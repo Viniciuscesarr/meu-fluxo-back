@@ -22,14 +22,11 @@ WORKDIR /var/www/html
 # 6. Copia todo o projeto
 COPY . .
 
-# 7. Instala dependências do Laravel
-RUN composer install --no-dev --optimize-autoloader
+# 7. Instala dependências do Laravel (com tratamento de erro)
+RUN composer install --no-dev --optimize-autoloader --no-interaction || composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
 
-# 8. Cache das configurações (IMPORTANTE)
-RUN php artisan config:cache
-
-# 9. Expõe a porta 8000
+# 8. Expõe a porta 8000
 EXPOSE 8000
 
-# 10. Start command
-CMD sh -c "php artisan config:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+# 9. Start command
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
