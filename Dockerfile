@@ -12,39 +12,23 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copia todo o projeto
-COPY . .
+# Copia primeiro apenas os arquivos necessários para composer
+COPY composer.json composer.lock ./
 
-# Instala dependências SEM scripts
+# Instala dependências (INCLUINDO o pacote CORS)
 RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction --ignore-platform-reqs
 
-# Cria o arquivo CORS
-RUN mkdir -p config && \
-    echo '<?php' > config/cors.php && \
-    echo '' >> config/cors.php && \
-    echo 'return [' >> config/cors.php && \
-    echo "    'paths' => ['api/*', 'sanctum/csrf-cookie']," >> config/cors.php && \
-    echo "    'allowed_methods' => ['*']," >> config/cors.php && \
-    echo "    'allowed_origins' => ['*']," >> config/cors.php && \
-    echo "    'allowed_origins_patterns' => []," >> config/cors.php && \
-    echo "    'allowed_headers' => ['*']," >> config/cors.php && \
-    echo "    'exposed_headers' => []," >> config/cors.php && \
-    echo "    'max_age' => 0," >> config/cors.php && \
-    echo "    'supports_credentials' => false," >> config/cors.php && \
-    echo '];' >> config/cors.php
+# Copia o restante do projeto
+COPY . .
 
-# Substitui a função withMiddleware vazia pela versão com CORS
-RUN sed -i '/->withMiddleware(function (Middleware $middleware): void {/,/^    })/c\
-    ->withMiddleware(function (Middleware $middleware) {\
-        $middleware->validateCsrfTokens(except: [\
-            \"api/*\",\
-        ]);\
-        \
-        $middleware->append(\\Illuminate\\Http\\Middleware\\HandleCors::class);\
-    })' bootstrap/app.php
+# Garante que o pacote CORS está instalado
+RUN composer require fruitcake/laravel-cors
+
+# Publica a configuração do CORS
+RUN php artisan vendor:publish --tag="cors"
 
 # Limpa e recria o cache
-RUN php artisan config:clear && php artisan config:cache
+RUN php artisan config:clear && php artisan cache:clear && php artisan config:cache
 
 EXPOSE 8000
 
