@@ -19,14 +19,20 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # 5. Define diretório de trabalho
 WORKDIR /var/www/html
 
-# 6. Copia todo o projeto
+# 6. Copia APENAS os arquivos do Composer primeiro
+COPY composer.json composer.lock ./
+
+# 7. Instala dependências SEM otimização primeiro
+RUN composer install --no-dev --no-scripts --no-interaction
+
+# 8. Copia o resto do projeto
 COPY . .
 
-# 7. Instala dependências do Laravel (com tratamento de erro)
-RUN composer install --no-dev --optimize-autoloader --no-interaction || composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
+# 9. Executa otimização depois
+RUN composer dump-autoload --optimize
 
-# 8. Expõe a porta 8000
+# 10. Expõe a porta 8000
 EXPOSE 8000
 
-# 9. Start command
+# 11. Start command
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
