@@ -18,23 +18,22 @@ COPY . .
 # Instala dependências SEM scripts
 RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction --ignore-platform-reqs
 
-# Cria o arquivo CORS CORRETAMENTE
-RUN mkdir -p config && cat > config/cors.php << 'EOF'
-<?php
+# Cria o arquivo CORS usando echo
+RUN mkdir -p config && \
+    echo '<?php' > config/cors.php && \
+    echo '' >> config/cors.php && \
+    echo 'return [' >> config/cors.php && \
+    echo "    'paths' => ['api/*', 'sanctum/csrf-cookie']," >> config/cors.php && \
+    echo "    'allowed_methods' => ['*']," >> config/cors.php && \
+    echo "    'allowed_origins' => ['*']," >> config/cors.php && \
+    echo "    'allowed_origins_patterns' => []," >> config/cors.php && \
+    echo "    'allowed_headers' => ['*']," >> config/cors.php && \
+    echo "    'exposed_headers' => []," >> config/cors.php && \
+    echo "    'max_age' => 0," >> config/cors.php && \
+    echo "    'supports_credentials' => false," >> config/cors.php && \
+    echo '];' >> config/cors.php
 
-return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
-    'allowed_methods' => ['*'],
-    'allowed_origins' => ['*'],
-    'allowed_origins_patterns' => [],
-    'allowed_headers' => ['*'],
-    'exposed_headers' => [],
-    'max_age' => 0,
-    'supports_credentials' => false,
-];
-EOF
-
-# Remove o cache de configuração problemático (vamos deixar o Laravel gerar)
+# Limpa cache problemático
 RUN php artisan config:clear
 
 EXPOSE 8000
