@@ -15,17 +15,30 @@ WORKDIR /var/www/html
 # Copia primeiro apenas os arquivos necessários para composer
 COPY composer.json composer.lock ./
 
-# Instala dependências (INCLUINDO o pacote CORS)
+# Instala dependências SEM o pacote CORS descontinuado
 RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction --ignore-platform-reqs
 
 # Copia o restante do projeto
 COPY . .
 
-# Garante que o pacote CORS está instalado
-RUN composer require fruitcake/laravel-cors
+# Cria o arquivo CORS manualmente (solução nativa do Laravel)
+RUN mkdir -p config && \
+    echo '<?php' > config/cors.php && \
+    echo '' >> config/cors.php && \
+    echo 'return [' >> config/cors.php && \
+    echo "    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'register']," >> config/cors.php && \
+    echo "    'allowed_methods' => ['*']," >> config/cors.php && \
+    echo "    'allowed_origins' => ['https://meu-fluxo-nine.vercel.app']," >> config/cors.php && \
+    echo "    'allowed_origins_patterns' => []," >> config/cors.php && \
+    echo "    'allowed_headers' => ['*']," >> config/cors.php && \
+    echo "    'exposed_headers' => []," >> config/cors.php && \
+    echo "    'max_age' => 0," >> config/cors.php && \
+    echo "    'supports_credentials' => true," >> config/cors.php && \
+    echo '];' >> config/cors.php
 
-# Publica a configuração do CORS
-RUN php artisan vendor:publish --tag="cors"
+# Garante que as permissões estão corretas
+RUN chown -R www-data:www-data /var/www/html/storage
+RUN chown -R www-data:www-data /var/www/html/bootstrap/cache
 
 # Limpa e recria o cache
 RUN php artisan config:clear && php artisan cache:clear && php artisan config:cache
