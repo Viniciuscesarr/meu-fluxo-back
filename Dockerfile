@@ -1,14 +1,15 @@
 # 1. Imagem base PHP com FPM
 FROM php:8.2-fpm
 
-# 2. Instala dependências do sistema
+# 2. Instala dependências do sistema (ADICIONE libpq-dev AQUI)
 RUN apt-get update && apt-get install -y \
     libonig-dev \
     libzip-dev \
+    libpq-dev \  # <--- ADICIONE ESTA LINHA
     unzip \
     git \
     curl \
-    && docker-php-ext-install pdo pdo_mysql mbstring zip
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql pgsql mbstring zip  # <--- ADICIONE pdo_pgsql pgsql
 
 # 3. Instala Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
