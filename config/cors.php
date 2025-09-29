@@ -1,15 +1,11 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'register'],
+    'paths' => ['*'],
     
     'allowed_methods' => ['*'],
     
-    'allowed_origins' => [
-        'https://meu-fluxo-nine.vercel.app',
-        'http://localhost:3000',
-        'http://localhost:5173' // ou a porta do seu frontend local
-    ],
+    'allowed_origins' => ['*'],
     
     'allowed_origins_patterns' => [],
     
