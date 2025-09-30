@@ -1,7 +1,5 @@
 <?php
 
-<?php
-
 return [
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
     
