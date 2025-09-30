@@ -1,11 +1,13 @@
 <?php
 
+<?php
+
 return [
-    'paths' => ['*'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
     
-    'allowed_methods' => ['https://meu-fluxo-nine.vercel.app'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     
-    'allowed_origins' => ['*'],
+    'allowed_origins' => ['https://meu-fluxo-nine.vercel.app'],
     
     'allowed_origins_patterns' => [],
     
@@ -17,3 +19,4 @@ return [
     
     'supports_credentials' => true,
 ];
+
