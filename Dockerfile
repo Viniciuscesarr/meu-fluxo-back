@@ -1,28 +1,38 @@
-FROM php:8.2-fpm
+FROM php:8.1-fpm
 
-# Instala dependências do sistema
+# Instalar dependências do sistema
 RUN apt-get update && apt-get install -y \
-    libonig-dev libzip-dev libpq-dev unzip git curl
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Instala extensões PHP necessárias
-RUN docker-php-ext-install pdo pdo_pgsql mbstring zip
-
-# Instala Composer
+# Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+# Configurar diretório de trabalho
+WORKDIR /var/www
 
-# Copia todo o projeto
+# Copiar arquivos do composer primeiro (para cache)
+COPY composer.json composer.lock ./
+
+# Instalar dependências PHP
+ENV COMPOSER_MEMORY_LIMIT=-1
+RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs --no-cache
+
+# Copiar resto dos arquivos
 COPY . .
 
-# Instala dependências do Laravel
-RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
+# Configurar permissões
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 755 /var/www/storage \
+    && chmod -R 755 /var/www/bootstrap/cache
 
-# Ajusta permissões de storage e bootstrap/cache
-RUN chmod -R 775 storage bootstrap/cache
-
-# Expõe porta padrão (Railway vai redirecionar para $PORT)
 EXPOSE 9000
-
-# Start command padrão
-CMD ["php-fpm", "-F"]
+CMD ["php-fpm"]
