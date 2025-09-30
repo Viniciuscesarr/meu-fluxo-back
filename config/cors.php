@@ -3,7 +3,7 @@
 return [
     'paths' => ['*'],
     
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['https://meu-fluxo-nine.vercel.app'],
     
     'allowed_origins' => ['*'],
     
