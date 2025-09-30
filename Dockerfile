@@ -32,12 +32,14 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# --- Copia entrypoint script ---
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
 # --- Porta padrão ---
 EXPOSE 8000
 
-# --- Comando de inicialização ---
-CMD ["entrypoint.sh"]
+# --- Comando de inicialização inline ---
+CMD php artisan config:clear && \
+    php artisan route:clear && \
+    php artisan cache:clear && \
+    php artisan view:clear && \
+    php artisan config:cache && \
+    php artisan migrate --force && \
+    php artisan serve --host=0.0.0.0 --port=8000
