@@ -5,7 +5,7 @@ return [
     
     'allowed_methods' => ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     
-    'allowed_origins' => ['https://meu-fluxo-nine.vercel.app'],
+    'allowed_origins' => ['https://meu-fluxo-nine.vercel.app', 'http://localhost:5173'],
     
     'allowed_origins_patterns' => [],
     
